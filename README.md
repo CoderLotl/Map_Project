@@ -11,11 +11,15 @@
     <summary>Table of Contents</summary>
     <ol>
         <li><a href="#about-the-project">About The Project</a></li>
-        <ul>
+        <ul><a href="#requirements">Requirements</a></ul>
+        <ul>            
             <a href="#built-with">Built With</a>
         </ul>
-        <li>Item</li>
-        <li>Item</li>
+        <li><a href="#getting-started">Getting Started</a></li>
+        <li><a href="#usage">Usage</a></li>
+        <li><a href="#the-system-explained">The System Explained</a></li>
+        <li><a href="#license">License</a></li>
+        <li><a href="#contact">Contact</a></li>
     </ol>
 </details>
 
@@ -123,3 +127,4 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 * ![Static Badge](https://img.shields.io/badge/Discord%3A-CoderLotl-gray?style=for-the-badge&logo=discord&logoColor=%235865F2&labelColor=black)
 * ![Static Badge](https://img.shields.io/badge/Gmail%3A-j.e.delmar.87%40gmail.com-gray?style=for-the-badge&logo=gmail&logoColor=%23EA4335&labelColor=black)
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
