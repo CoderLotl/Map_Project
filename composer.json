@@ -1,0 +1,15 @@
+{
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        },
+        "classmap": [
+            "app/",
+            "vendor/"
+        ]
+    },
+    "require": {
+        "slim/slim": "*",
+        "slim/psr7": "*"        
+     }
+ }
