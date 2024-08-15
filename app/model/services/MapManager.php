@@ -304,6 +304,9 @@ class MapManager
         return $clip;
     }
 
+    /*
+    // UNUSED, but could be used.
+    */
     public static function ReturnRandomCoords($request, $response)
     {
         $tiles = DataAccess::Select('map');
@@ -359,15 +362,26 @@ class MapManager
         return self::ReturnResponse($request, $response, $payload);
     }
 
+    /**
+     * @param mixed $request
+     * @param mixed $response
+     * @param bool $isPic Determines if the function should return a picture or just numeric params.
+     * 
+     * @return [type]
+     */
     public static function ReturnArrival($request, $response, $isPic = false)
     {
         $params = self::GetRequest($request);
         $speed = 20 * $params['speed'] / 100;
         $landMasses = DataAccess::Select('land_masses');
         $tiles = DataAccess::Select('map');
-        $aground = false;
-        $agroundArea = [];
+        $aground = false;        
+        $arrivalPoint = null;
+        $returnMessage = null;
 
+        $dimensions = self::GetMapDimnensions($tiles);
+
+        // If the speed is 0, we return either the same pic or the same coords.
         if($params['speed'] == 0)
         {
             if($isPic)
@@ -381,91 +395,101 @@ class MapManager
             }
         }
 
-        [$arrivalX, $arrivalY] = self::CalculateArrivalPoint($params['x'], $params['y'], $params['angle'], $speed, true);        
-        
-        foreach($landMasses as $landMass)
-        {            
-            $stdChunk = json_decode($landMass['corners']);
-            
-            $chunk = [];
-            foreach($stdChunk as $bit)
-            {
-                $chunk[] = (array) $bit;
-            }
 
-            $isInArea = self::IsInArea(['x' => $arrivalX, 'y' => $arrivalY], $chunk);            
-            if($isInArea)
+
+        // - - - - -
+        // Else we proceed to check the trip ...
+        // - - - - -
+        // We go from speed 0, to the max set by the client ...
+        for($i = 0; $i < $speed; $i++)
+        {
+            if(!$aground)
             {
-                $aground = true;
-                $agroundArea = $chunk;
+                // We get the arrival point for the iterated speed ...
+                [$arrivalX, $arrivalY] = self::CalculateArrivalPoint($params['x'], $params['y'], $params['angle'], $i, $dimensions, true);
+                
+                // For each landmass we check if the current arrival point collides with the landmass or not.
+                foreach($landMasses as $landMass)
+                {            
+                    $stdChunk = json_decode($landMass['corners']);
+                    
+                    $chunk = [];
+                    foreach($stdChunk as $bit)
+                    {
+                        $chunk[] = (array) $bit;
+                    }
+        
+                    $isInArea = self::IsInArea(['x' => $arrivalX, 'y' => $arrivalY], $chunk);            
+                    if($isInArea)
+                    {
+                        // If the current arrival point collides with the landmass, then we set the flag $aground, and exit the iteration
+                        // of landmasses.
+                        $aground = true;                    
+                        break;
+                    }                    
+                }
+
+                if(!$aground)
+                {
+                    // If the ship is not aground, then we set the arrival point as safe and go for the next iteration.
+                    $arrivalPoint = [$arrivalX, $arrivalY];
+                }
+            }
+            else
+            {
                 break;
             }
-        }        
-
-        // If the ship doesn't collide with the landmass, we return a picture as we should.
-        if(!$aground)
-        {
-            if($isPic)
-            {
-                $clip = self::ReturnImageByCoords($arrivalX, $arrivalY, $tiles, 100, true, true);        
-                return self::ReturnImageResponse($clip);
-            }
-            else
-            {
-                return self::ReturnResponse($request, $response, [$arrivalX, $arrivalY, $params['speed'], 'The ship is sailing.', false]);
-            }
-        }
-        
-
-        // - - -
-        // Else...
-        // - - -
-
-        // Since arrival point is inside, need to find the closest point on the boundary
-        $closestPoint = null;
-        $cpFound = false;
-        $speed_ = 20;
-
-        while($cpFound == false)
-        {
-            [$arrivalX_, $arrivalY_] = self::CalculateArrivalPoint($params['x'], $params['y'], $params['angle'], $speed_, true);
-            $isInArea = self::IsInArea(['x' => $arrivalX_, 'y' => $arrivalY_], $agroundArea);
-            if($isInArea == true)
-            {
-                $speed_ -= 1;
-            }
-            else
-            {
-                $closestPoint = [$arrivalX_, $arrivalY_];
-                $cpFound = true;
-            }
         }
 
-        // If no intersection found on edges (unlikely), use the original arrival point
-        if(!$closestPoint)
+        if($aground)
         {
-            if($isPic)
-            {
-                $clip = self::ReturnImageByCoords($arrivalX, $arrivalY, $tiles, 100, true, true);
-                Log::WriteLog('bb.txt', 'a');
-                return self::ReturnImageResponse($clip);
-            }
-            else
-            {
-                Log::WriteLog('b.txt', json_encode([$arrivalX, $arrivalY]));
-                return self::ReturnResponse($request, $response, [$arrivalX, $arrivalY, 0, 'The ship stops to prevent crashing on land.', true]);
-            }
+            $speed = 0;
+            $returnMessage = 'The ship stops to prevent crashing on land.';
+        }
+        else
+        {            
+            $returnMessage = 'The ship is sailing.';
         }
 
         if($isPic)
         {
-            $clip = self::ReturnImageByCoords($closestPoint[0], $closestPoint[1], $tiles, 100, true, true);
+            $clip = self::ReturnImageByCoords($arrivalPoint[0], $arrivalPoint[1], $tiles, 100, true, true);        
             return self::ReturnImageResponse($clip);
         }
         else
-        {            
-            return self::ReturnResponse($request, $response, [$closestPoint[0], $closestPoint[1], 0, 'The ship stops to prevent crashing on land.', true]);
+        {
+            return self::ReturnResponse($request, $response, [$arrivalPoint[0], $arrivalPoint[1], $speed, $returnMessage, $aground]);
         }
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    private static function GetMapDimnensions($map)
+    {
+        $rows = 0;
+        $columns = 0;
+        $xLimit = 0;
+        $yLimit = 0;
+        $dimensions = ["x"=> 0, "y"=>0];
+
+        foreach($map as $tile)
+        {
+            if($tile['x'] > $xLimit)
+            {
+                $xLimit = $tile['x'];
+                $columns++;
+            }
+            if($tile['y'] > $yLimit)
+            {
+                $yLimit = $tile['y'];
+                $rows++;
+            }
+        }
+
+        $dimensions["x"] = ($map[0]['x'] * 2) * $columns;
+        $dimensions["y"] = ($map[0]['y'] * 2) * $rows;
+
+        return $dimensions;
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -500,8 +524,8 @@ class MapManager
         return ($intersections % 2 != 0) ? true : false;
     }
 
-    private static function CalculateArrivalPoint($startX, $startY, $angle, $distance, $round = true)
-    {
+    private static function CalculateArrivalPoint($startX, $startY, $angle, $distance, $limits, $round = true)
+    {            
         // Convert angle to radians (0 degrees is 6 o'clock)
         $angleInRadians = deg2rad($angle - 90);
     
@@ -519,6 +543,23 @@ class MapManager
             $arrivalX = round($arrivalX); // Adjust rounding precision as needed
             $arrivalY = round($arrivalY);
         }
+
+        if($arrivalX > $limits['x'])
+        {
+            $arrivalX = $arrivalX - $limits['x'];
+        }
+        elseif($arrivalX < 0)
+        {
+            $arrivalX = $limits['x'] + $arrivalX;
+        }
+        if($arrivalY > $limits['y'])
+        {
+            $arrivalY = $arrivalY - $limits['y'];
+        }
+        elseif($arrivalY < 0)
+        {
+            $arrivalY = $limits['y'] + $arrivalY;
+        }        
     
         return [$arrivalX, $arrivalY];
     }

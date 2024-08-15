@@ -24,13 +24,13 @@
         <div id="top-half" class="w-full h-1/2 flex">
             <div id="map-container" class="border-x border-t border-white w-full h-full rounded-t-3xl p-6 flex flex-col items-center justify-around">
                 <!-- svelte-ignore a11y-missing-attribute -->
-                <img id="clip" class="rounded-3xl">
+                <img id="clip" class="rounded-3xl w-[80%] mt-[25%]">
                 <p id="coords" class="text-slate-300 pb-20"></p>
             </div>
         </div>
         <div id="bottom-half" class="h-1/2 flex">
 
-            <div id="controls" class="border-l border-b border-white grow w-1/2 rounded-bl-3xl p-2">
+            <div id="controls" class="border-l border-b border-white w-1/2 rounded-bl-3xl p-2">
                 <fieldset class="border border-white rounded-3xl p-4 w-full h-full flex flex-col items-center">
                     <legend class="px-2 bg-slate-400 rounded-xl duration-500 hover:text-red-600 hover:duration-500">
                         Controls
@@ -71,7 +71,7 @@
                 </fieldset>
             </div>
             
-            <div id="location-details" class="border-r border-b border-white w-1/2 rounded-br-3xl p-2 grow">
+            <div id="location-details" class="border-r border-b border-white w-1/2 rounded-br-3xl p-2">
                 <fieldset class="border border-white rounded-3xl p-4 w-full h-full">
                     <legend class="px-2 bg-slate-400 rounded-xl duration-500 hover:text-red-600 hover:duration-500">
                         Details
