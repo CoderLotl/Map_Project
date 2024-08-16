@@ -84,8 +84,8 @@ class MapManager
         $yPos = 0;
         $tileHeight = $tiles[0]['y'] * 2;
         $tileWidth= $tiles[0]['x'] * 2;
-        $mapHeight = 0;
-        $mapWidth = 0;    
+        $clipHeight = 0;
+        $clipMapWidth = 0;    
 
         foreach($tiles as $tile)
         {
@@ -119,9 +119,9 @@ class MapManager
             array_push($map[$y], $tile['data']);
         }
 
-        $mapHeight = count($map) * $tileHeight;
-        $mapWidth = count($map[0]) * $tileWidth;
-        $image = imagecreatetruecolor($mapWidth, $mapHeight);
+        $clipHeight = count($map) * $tileHeight;
+        $clipMapWidth = count($map[0]) * $tileWidth;
+        $image = imagecreatetruecolor($clipMapWidth, $clipHeight);
         
         for($yy = 0; $yy < $y + 1; $yy++)
         {
@@ -160,32 +160,24 @@ class MapManager
         $map = []; // This is the initial map we're going to make, not the real whole map. From this we're gonna cut a clip.
         $tileWidth = $tiles[0]['x'] * 2;
         $tileHeight = $tiles[0]['y'] * 2;
-
+        $mapDimensions = self::GetMapDimnensions($tiles);
         $x = 0;
         $xPos = 0;
         $y = 0;
         $yPos = 0;
-        $mapHeight = 0;
-        $mapWidth = 0;   
+        $clipHeight = 0;
+        $clipMapWidth = 0;   
 
-        // Defining the search area as a square. The corners are top left, top right, bottom left, and bottom right.
-        // It's important to keep in mind that the top left corner of the real picture is the point 0x,0y, and the bottom right is mapWidth-x,mapHeight-y.
+        // Defining the search area as a square. The corners are top left, top right, bottom left, and bottom right.        
         $topLeft = [$charX - $distance, $charY - $distance];
-        $topRight = [$charX + $distance, $charY - $distance];
-        $bottomLeft = [$charX - $distance, $charY + $distance];
         $bottomRight = [$charX + $distance, $charY + $distance];
-
-        // We make sure the search area is within the map's area.
-        $topLeft[0] < 0 ? 0 : $topLeft[0]; $topLeft[1] < 0 ? 0 : $topLeft[1];    
-        $topRight[0] > $mapWidth ? $mapWidth : $topRight[0]; $topRight[1] < 0 ? 0 : $topRight[1];
-        $bottomLeft[0] < 0 ? 0 : $bottomLeft[0]; $bottomLeft[1] > $mapHeight ? $mapHeight : $bottomLeft[1];    
-        $bottomRight[0] > $mapWidth ? $mapWidth : $bottomRight[0]; $bottomRight[1] > $mapHeight ? $mapHeight : $bottomRight[1];
 
         $searchLeft = $topLeft[0];
         $searchRight = $bottomRight[0];
         $searchTop = $topLeft[1];
         $searchBottom = $bottomRight[1];
-            
+        
+        // We iterate for each of the tiles, which compose the whole map.
         foreach ($tiles as $tile)
         {
             $tileCenterX = $tile['x'];
@@ -236,9 +228,9 @@ class MapManager
         }    
 
         // We calculate the size of the new map and create the base image.
-        $mapHeight = count($map) * $tileHeight;
-        $mapWidth = count($map[0]) * $tileWidth;
-        $image = imagecreatetruecolor($mapWidth, $mapHeight);
+        $clipHeight = count($map) * $tileHeight;
+        $clipMapWidth = count($map[0]) * $tileWidth;
+        $image = imagecreatetruecolor($clipMapWidth, $clipHeight);
         
         // We proceed to make a collage with the tiles.
         for($yy = 0; $yy < $y + 1; $yy++)
@@ -254,20 +246,20 @@ class MapManager
 
         // Now we cut the area we need to show.
         //First we find the center of our image.
-        $mapCenterX = $charX - ($map[0][0]['x'] - ($tileWidth / 2));
-        $mapCenterY = $charY - ($map[0][0]['y'] - ($tileHeight / 2));
+        $clipCenterX = $charX - ($map[0][0]['x'] - ($tileWidth / 2));
+        $clipCenterY = $charY - ($map[0][0]['y'] - ($tileHeight / 2));
 
-        $clipWidth = (($distance * 2) <= $mapWidth ) ? $distance * 2 : $mapWidth;
-        $clipHeight = (($distance * 2) <= $mapHeight ) ? $distance * 2 : $mapHeight;
+        $clipWidth = (($distance * 2) <= $clipMapWidth ) ? $distance * 2 : $clipMapWidth;
+        $clipHeight = (($distance * 2) <= $clipHeight ) ? $distance * 2 : $clipHeight;
 
         // src_x and src_y represent the point 0:0 of the clip, which is the top left corner.
-        $src_x = $mapCenterX - $distance;
-        $src_y = $mapCenterY - $distance;
+        $src_x = $clipCenterX - $distance;
+        $src_y = $clipCenterY - $distance;
         
         if($centerDot)
         {
             $color_centrepoint = imagecolorallocate ($image, 255, 165, 0);
-            imagefilledellipse ($image, $mapCenterX, $mapCenterY, 6, 6, $color_centrepoint);
+            imagefilledellipse ($image, $clipCenterX, $clipCenterY, 6, 6, $color_centrepoint);
         }
 
         $clip = imagecreatetruecolor($clipWidth, $clipHeight);
@@ -318,8 +310,8 @@ class MapManager
         $yPos = 0;
         $tileHeight = $tiles[0]['y'] * 2;
         $tileWidth= $tiles[0]['x'] * 2;
-        $mapHeight = 0;
-        $mapWidth = 0; 
+        $clipHeight = 0;
+        $clipMapWidth = 0; 
 
         foreach($tiles as $tile)
         {
@@ -352,11 +344,11 @@ class MapManager
 
             array_push($map[$y], $tile['data']);
         }
-        $mapHeight = count($map) * $tileHeight;
-        $mapWidth = count($map[0]) * $tileWidth;
+        $clipHeight = count($map) * $tileHeight;
+        $clipMapWidth = count($map[0]) * $tileWidth;
 
-        $newX = rand(1, $mapWidth);
-        $newY = rand(1, $mapHeight);
+        $newX = rand(1, $clipMapWidth);
+        $newY = rand(1, $clipHeight);
 
         $payload = [$newX, $newY];
         return self::ReturnResponse($request, $response, $payload);
@@ -464,6 +456,14 @@ class MapManager
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    /**
+     * Gets an array of tiles, each of the format ['x'=><int>, 'y'=><int>, 'data'=><string>]. This array represents a map.
+     * 'x' represents the middle X coord of the tile. 'y' represents the middle Y coord of the tile.
+     * The function returns the dimensions of the map as an array of 2 ints.
+     * @param mixed $map
+     * 
+     * @return [type]
+     */
     private static function GetMapDimnensions($map)
     {
         $rows = 0;

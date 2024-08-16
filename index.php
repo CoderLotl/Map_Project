@@ -46,16 +46,20 @@ $app = AppFactory::create();
 // Error middleware
 $errorMiddleware = function ($request, $exception, $displayErrorDetails) use ($app)
 {
-  $statusCode = 500;
-  $errorMessage = $exception->getMessage();
-  $requestedUrl = $request->getUri()->getPath();
-  $httpMethod = $request->getMethod();
-  
-  $response = $app->getResponseFactory()->createResponse($statusCode);
-  $response->getBody()->write(json_encode(['error' => $errorMessage]));
-  
-  $logMessage = "Error: " . $errorMessage . " (METHOD: " . $httpMethod . ", URL: " . $requestedUrl . ")";
-  Log::WriteLog('index_error.txt', $logMessage);
+    $statusCode = 500;
+    $errorMessage = $exception->getMessage();
+    $requestedUrl = $request->getUri()->getPath();
+    $httpMethod = $request->getMethod();
+    
+    $response = $app->getResponseFactory()->createResponse($statusCode);
+    $response->getBody()->write(json_encode(['error' => $errorMessage]));
+    
+    $trace = $exception->getTrace();
+    $errorFile = $trace[0]['file'] ?? 'unknown';
+    $errorLine = $trace[0]['line'] ?? 'unknown';
+    
+    $logMessage = "Error: " . $errorMessage . "\n" . " (METHOD: " . $httpMethod . ", URL: " . $requestedUrl . ", FILE: " . $errorFile . ", LINE: " . $errorLine . ")";
+    Log::WriteLog('index_error.txt', $logMessage);
     return $response->withHeader('Content-Type', 'application/json');
 };
 
