@@ -1,6 +1,9 @@
 <?php
 
-require '../app/model/services/DataAccess.php';
+require __DIR__ . '../../../vendor/autoload.php'; // Classes Autoloader.
+require __DIR__ . '../../../app/config/config.php'; // Initial configs.
+
+use Model\Services\DataAccess;
 
 function ImageToB64Tiles($imagePath, $rows, $cols)
 {
@@ -11,15 +14,33 @@ function ImageToB64Tiles($imagePath, $rows, $cols)
     $tileWidth = $width / $cols;
     $tileHeight = $height / $rows;
     $tiles = [];
-    $xPos = $tileWidth / 2;
-    $yPos = $tileHeight / 2;    
 
-    for ($y = 0; $y < $rows; $y++)
+    $xPos = ($width * -1) + ($tileWidth / 2);
+    $yPos = ($height * -1) + ($tileHeight / 2);
+    
+    $t_cols = $cols * 3;
+    $t_rows = $rows * 3;
+
+    $col = 0;
+    $row = 0;
+
+    for ($y = 0; $y < $t_rows; $y++)
     {
-        for ($x = 0; $x < $cols; $x++)
+        for ($x = 0; $x < $t_cols; $x++)
         {
             $tile = imagecreatetruecolor($tileWidth, $tileHeight);
-            imagecopyresampled($tile, $image, 0, 0, $x * $tileWidth, $y * $tileHeight, $tileWidth, $tileHeight, $tileWidth, $tileHeight);
+            imagecopyresampled(
+                $tile,
+                $image,
+                0,
+                0,
+                $col * $tileWidth,
+                $row * $tileHeight,
+                $tileWidth,
+                $tileHeight,
+                $tileWidth,
+                $tileHeight
+            );
 
             ob_start(); // Start output buffering
             imagejpeg($tile, null, 100); // Capture image data (adjust format if needed)
@@ -42,16 +63,33 @@ function ImageToB64Tiles($imagePath, $rows, $cols)
             // Add base64 string to output array
             $tiles[] = $tileData;
             
-            if($x + 1 < $cols)
+            if($x + 1 < $t_cols)
             {
                 $xPos += $tileWidth;                
             }
             else
             {
-                $xPos = $tileWidth / 2;                
+                $xPos = ($width * -1) + ($tileWidth / 2);
+            }
+
+            if($col + 1 < $cols)
+            {
+                $col ++;
+            }
+            else
+            {
+                $col = 0;
             }
         }
         $yPos += $tileHeight;
+        if($row + 1 < $rows)
+        {
+            $row ++;
+        }
+        else
+        {
+            $row = 0;
+        }
     }
     imagedestroy($image);
 
@@ -65,10 +103,10 @@ $cols = 4;
 
 $tiles = ImageToB64Tiles($imagePath, $rows, $cols);
 
-DataAccess::$pdo = new PDO('sqlite:' . '../app/db/db.sqlite');
+DataAccess::$pdo = new PDO('sqlite:' . '../../app/db/db.sqlite');
 DataAccess::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 foreach($tiles as $tile)
 {
-    DataAccess::Insert('locations', ['x', 'y', 'data'], [$tile['x'], $tile['y'], $tile['data']]);
+    DataAccess::Insert('map', ['x', 'y', 'data'], [$tile['x'], $tile['y'], $tile['data']]);
 }
