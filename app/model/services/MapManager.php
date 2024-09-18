@@ -23,46 +23,164 @@ class MapManager
         $image = imagecreatefromjpeg($imagePath);
         $width = imagesx($image);
         $height = imagesy($image);    
-
         $tileWidth = $width / $cols;
         $tileHeight = $height / $rows;
         $tiles = [];
-        $xPos = $tileWidth / 2;
-        $yPos = $height - ($tileHeight / 2);
-
-        for ($y = 0; $y < $rows; $y++)
+        $xPos = $tileWidth / 2;     // X center for the 1st tile
+        $yPos = $tileHeight / 2;    // Y center for the 1st tile
+    
+        $totalCols = $cols * 2;
+        $totalRows = $rows * 2;
+    
+        $colsOffset = ($cols * 2) / 4;
+        $rowsOffset = ($rows * 2) / 4;
+    
+        // We create our initial blank matrix.
+        for($y = 0; $y < $totalRows; $y++)
         {
-            for ($x = 0; $x < $cols; $x++)
+            for($x = 0; $x < $totalCols; $x++)
             {
-                $tile = imagecreatetruecolor($tileWidth, $tileHeight);
-                imagecopyresampled($tile, $image, 0, 0, $x * $tileWidth, $y * $tileHeight, $tileWidth, $tileHeight, $tileWidth, $tileHeight);
-
+                $tiles[$y][$x] = [];
+            }
+        }
+    
+        // We process the image and turn it into tiles, throwing them at the center of the map keeping into account the offset.
+        for($y = 0; $y < $rows; $y++)
+        {        
+            for($x = 0; $x < $cols; $x++)
+            {            
+                $tile = imagecreatetruecolor($tileWidth, $tileHeight); // We create a blank GD image.
+                imagecopyresampled(
+                    $tile,              // Destination image ($dst_img)
+                    $image,             // Source image ($src_image)
+                    0,                  // X offset in the destination image
+                    0,                  // Y offset in the destination image
+                    $x * $tileWidth,    // X offset in the source image
+                    $y * $tileHeight,   // Y offset in the source image
+                    $tileWidth,         // X width of the newly resampled image
+                    $tileHeight,        // Y width of the newly resampled image
+                    $tileWidth,         // X width of the area to copy out of the $src_image
+                    $tileHeight         // Y width of the area to copy out of the $src_image
+                );
+    
                 ob_start(); // Start output buffering
                 imagejpeg($tile, null, 100); // Capture image data (adjust format if needed)
                 $imageData = ob_get_contents();
                 ob_end_clean(); // Stop output buffering
-        
+          
                 // Encode image data to base64
                 $base64 = base64_encode(gzcompress(serialize($imageData), 9));
-        
+          
                 // Free memory from temporary tile image
                 imagedestroy($tile);
-
+    
                 $tileData =
                 [
                     'x' => $xPos,
                     'y' => $yPos,
                     'data' => $base64
                 ];
-        
-                // Add base64 string to output array
-                $tiles[] = $tileData;
-                $xPos += $tileWidth;
+    
+                $tiles[$y + $rowsOffset][$x + $colsOffset] = $tileData; // We throw our tile into the matrix, keeping into acount the offset.
+                
+                /*
+                Now... The initial map is at the center of our final map, which is y*2:x*2 the side of the initial map.
+                This means there rest of the map, which is blank till now, must be filled with quarters of the initial map.
+                        x1                                                                 y1:x4
+                      y1                |               |                   |
+                        bottom-right    |   bottom-left |   bottom-right    |   bottom-left
+                        ________________|_______________|___________________|_______________
+                                        |               |                   |
+                        top-right       |   top-left    |   top-right       |   top-left
+                        ________________|_______________|___________________|_______________
+                                        |               |                   |
+                        bottom-right    |   bottom-left |   bottom-right    |   bottom-left
+                        ________________|_______________|___________________|_______________
+                                        |               |                   |
+                        top-right       |   top-left    |   top-right       |   top-left
+                    y4  ________________|_______________|___________________|_______________ x4
+                                                                                            y4:x4
+                */
+    
+                $redundantTileData = $tileData;
+    
+                if($y < ($rows / 2))
+                {
+                    if($x < ($cols / 2)) // Top left quarter of the initial map.
+                    {
+                        $redundantTileData['x'] += $width;                    
+                        $tiles[$y + $rowsOffset][$x + ($colsOffset * 3)] = $redundantTileData; // y2:x4
+    
+                        $redundantTileData = $tileData;                    
+                        $redundantTileData['y'] += $height;
+                        $tiles[$y + ($rowsOffset * 3)][$x + $colsOffset] = $redundantTileData; // y4:x2
+    
+                        $redundantTileData = $tileData;                    
+                        $redundantTileData['x'] += $width;
+                        $redundantTileData['y'] += $height;
+                        $tiles[$y + ($rowsOffset * 3)][$x + ($colsOffset * 3)] = $redundantTileData; //y4:x4
+                    }
+                    else // Top right quarter of the initial map.
+                    {
+                        $redundantTileData['x'] -= $width;                    
+                        $tiles[$y + $rowsOffset][$x - $colsOffset] = $redundantTileData; // y2:x1
+    
+                        $redundantTileData = $tileData;                    
+                        $redundantTileData['x'] -= $width;
+                        $redundantTileData['y'] += $height;
+                        $tiles[$y + ($rowsOffset * 3)][$x - $colsOffset] = $redundantTileData; // y4:x1
+    
+                        $redundantTileData = $tileData;                    
+                        $redundantTileData['y'] += $height;
+                        $tiles[$y + ($rowsOffset * 3)][$x + $colsOffset] = $redundantTileData; // y4:x3
+                    }
+                }
+                else
+                {
+                    if($x < ($cols / 2)) // Bottom left quarter.
+                    {
+                        $redundantTileData['y'] -= $height;                    
+                        $tiles[$y - $rowsOffset][$x + $colsOffset] = $redundantTileData; // y1:x2
+    
+                        $redundantTileData = $tileData;                    
+                        $redundantTileData['x'] += $width;
+                        $redundantTileData['y'] -= $height;
+                        $tiles[$y - $rowsOffset][$x + ($colsOffset * 3)] = $redundantTileData; // y1:x4
+    
+                        $redundantTileData = $tileData;                    
+                        $redundantTileData['x'] += $width;
+                        $tiles[$y + $rowsOffset][$x + ($colsOffset * 3)] = $redundantTileData; // y3:x4
+                    }
+                    else // Bottom right quarter.
+                    {                    
+                        $redundantTileData['x'] -= $width;
+                        $redundantTileData['y'] -= $height;
+                        $tiles[$y - $rowsOffset][$x - $colsOffset] = $redundantTileData; // y1:x1
+    
+                        $redundantTileData = $tileData;                    
+                        $redundantTileData['y'] -= $height;
+                        $tiles[$y - $rowsOffset][$x + $colsOffset] = $redundantTileData; // y1:x3
+    
+                        $redundantTileData = $tileData;                    
+                        $redundantTileData['x'] -= $width;                    
+                        $tiles[$y + $rowsOffset][$x - $colsOffset] = $redundantTileData; // y3:x1
+                    }
+                }
+    
+                if($x + 1 < $cols)
+                {
+                    $xPos += $tileWidth;                
+                }
+                else
+                {
+                    $xPos = $tileWidth / 2;                
+                }
             }
-            $yPos -= $tileHeight;
+            $yPos += $tileHeight;
         }
+    
         imagedestroy($image);
-
+    
         // Return the array of base64 strings representing tiles
         return $tiles;
     }
@@ -86,10 +204,10 @@ class MapManager
         $clipMapWidth = 0;    
     
         // - - - Getting the map's columns and rows
-        $cols = 1;
-        $col = $tiles[0]['x'];
-        $rows = 1;
-        $row = $tiles[0]['y'];
+        $cols = 1;              // Columns counter
+        $rows = 1;              // Rows counter
+        $col = $tiles[0]['x'];  // We get the initial value for the 1st tile's middle x and y
+        $row = $tiles[0]['y'];        
     
         foreach($tiles as $tile)
         {
@@ -104,10 +222,11 @@ class MapManager
                 $row = $tile['y'];
             }        
         }
+        // We counted all columns and rows
         // - - - - - - - - - - - - - - - - - - - - -
     
         // Finding the 1st positiveX-positiveY tile.
-        $positive_base = ($cols * ($rows / 3)) + ($cols / 3);
+        $positive_base = ($cols * ($rows / 4)) + ($cols / 4);
     
         // With the 1st true positive tile we can get the tiles height and width.
         $tileHeight = $tiles[$positive_base]['y'] * 2;
