@@ -10,7 +10,7 @@ let storageManager = new StorageManager();
 
 export async function Init()
 {
-    let payload = {coord_x: 571, coord_y: 360, angle: 0, speed: 0};
+    let payload = {coord_x: 1, coord_y: 1, angle: 0, speed: 0};
     let newRoamer = { x: payload['coord_x'], y: payload['coord_y'], angle: 0, speed: 0 };
     storageManager.WriteSS('roamer', JSON.stringify(newRoamer));    
 
@@ -29,7 +29,7 @@ export async function Init()
         let roamer = JSON.parse(storageManager.ReadSS('roamer'));
         GetImageByCoords(roamer, '/next_turn_pic');
         let serverResponse = await dataAccess.getData(`${BACK_PATH_}` + '/next_turn_coords', roamer, true);        
-        // @ts-ignore
+        // @ts-ignore        
         let svResp = await serverResponse.json();
         svResp = svResp['response'];
         

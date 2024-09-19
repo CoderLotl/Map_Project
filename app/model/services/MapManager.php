@@ -307,15 +307,15 @@ class MapManager
     private static function ReturnImageByCoords($charX, $charY, $tiles, $distance = 100, $centerDot = false, $compass = false, $movement = null)
     {
         $map = []; // This is the initial map we're going to make, not the real whole map. From this we're gonna cut a clip.
-        $tileWidth = $tiles[0]['x'] * 2;
-        $tileHeight = $tiles[0]['y'] * 2;
         $mapDimensions = self::GetMapDimnensions($tiles);
+        $tileWidth = $mapDimensions['tileWidth'];
+        $tileHeight = $mapDimensions['tileHeight'];
         $x = 0;
         $xPos = 0;
         $y = 0;
         $yPos = 0;
         $clipHeight = 0;
-        $clipMapWidth = 0;   
+        $clipMapWidth = 0;        
 
         // Defining the search area as a square. The corners are top left, top right, bottom left, and bottom right.        
         $topLeft = [$charX - $distance, $charY - $distance];
@@ -324,7 +324,7 @@ class MapManager
         $searchLeft = $topLeft[0];
         $searchRight = $bottomRight[0];
         $searchTop = $topLeft[1];
-        $searchBottom = $bottomRight[1];
+        $searchBottom = $bottomRight[1];        
         
         // We iterate for each of the tiles, which compose the whole map.
         foreach ($tiles as $tile)
@@ -338,13 +338,16 @@ class MapManager
             $tileTop = $tileCenterY - $tileHeight / 2;
             $tileBottom = $tileCenterY + $tileHeight / 2;
 
+            //Log::WriteLog('s.txt', json_encode("{$tileLeft} {$tileRight} {$tileTop} {$tileBottom}"));
+            //Log::WriteLog('a.txt', json_encode("{$tileWidth} {$tileHeight}"));
+
             if(
                 // We check if the tile is in any point inside the search area.
                 ($searchLeft <= $tileRight && $searchRight >= $tileLeft) && // Overlap on X
                 ($searchTop <= $tileBottom && $searchBottom >= $tileTop)
             )
             {
-                // If so, we proceed to push the tiles into the new map.
+                // If so, we proceed to push the tiles into the new map.                
                 if($yPos == 0)
                 {
                     $yPos = $tile['y'];
@@ -536,8 +539,6 @@ class MapManager
             }
         }
 
-
-
         // - - - - -
         // Else we proceed to check the trip ...
         // - - - - -
@@ -615,30 +616,38 @@ class MapManager
      */
     private static function GetMapDimnensions($map)
     {
-        $rows = 0;
-        $columns = 0;
-        $xLimit = 0;
-        $yLimit = 0;
-        $dimensions = ["x"=> 0, "y"=>0];
-
+        // First we get the amount of columns and rows.
+        $cols = 1;              // Columns counter
+        $rows = 1;              // Rows counter
+        $col = $map[0]['x'];  // We get the initial value for the 1st tile's middle x and y
+        $row = $map[0]['y'];
+        $tileWidth = ($map[0]['x'] - $map[1]['x']) * (-1);
+        
+        $initialTileHalfHeight = $map[0]['y'];
+        $tileHeight = 0;
+    
         foreach($map as $tile)
         {
-            if($tile['x'] > $xLimit)
+            if($tile['x'] > $col)
             {
-                $xLimit = $tile['x'];
-                $columns++;
+                $cols++;
+                $col = $tile['x'];
             }
-            if($tile['y'] > $yLimit)
+            if($tile['y'] > $row)
             {
-                $yLimit = $tile['y'];
-                $rows++;
+                $rows ++;
+                $row = $tile['y'];
             }
-        }
+            if($tile['y'] > $initialTileHalfHeight && $tileHeight == 0)
+            {
+                $tileHeight = ($initialTileHalfHeight - $tile['y']) * (-1);
+            }
+        }        
+        
+        $mapWidth = $tileWidth * $cols;
+        $mapHeight = $tileHeight * $rows;
 
-        $dimensions["x"] = ($map[0]['x'] * 2) * $columns;
-        $dimensions["y"] = ($map[0]['y'] * 2) * $rows;
-
-        return $dimensions;
+        return ['width' => $mapWidth, 'height' => $mapHeight, 'tileWidth' => $tileWidth, 'tileHeight' => $tileHeight];
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - -
