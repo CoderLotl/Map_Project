@@ -338,9 +338,6 @@ class MapManager
             $tileTop = $tileCenterY - $tileHeight / 2;
             $tileBottom = $tileCenterY + $tileHeight / 2;
 
-            //Log::WriteLog('s.txt', json_encode("{$tileLeft} {$tileRight} {$tileTop} {$tileBottom}"));
-            //Log::WriteLog('a.txt', json_encode("{$tileWidth} {$tileHeight}"));
-
             if(
                 // We check if the tile is in any point inside the search area.
                 ($searchLeft <= $tileRight && $searchRight >= $tileLeft) && // Overlap on X
@@ -595,11 +592,11 @@ class MapManager
 
         if($isPic)
         {
-            $clip = self::ReturnImageByCoords($arrivalPoint[0], $arrivalPoint[1], $tiles, 100, true, true);        
+            $clip = self::ReturnImageByCoords($arrivalPoint[0], $arrivalPoint[1], $tiles, 100, true, true);            
             return self::ReturnImageResponse($clip);
         }
         else
-        {
+        {            
             return self::ReturnResponse($request, $response, [$arrivalPoint[0], $arrivalPoint[1], $speed, $returnMessage, $aground]);
         }
     }
@@ -702,21 +699,21 @@ class MapManager
             $arrivalY = round($arrivalY);
         }
 
-        if($arrivalX > $limits['x'])
+        if($arrivalX > ($limits['width'] / 2))
         {
-            $arrivalX = $arrivalX - $limits['x'];
+            $arrivalX = $arrivalX - ($limits['width'] / 2);
         }
         elseif($arrivalX < 0)
         {
-            $arrivalX = $limits['x'] + $arrivalX;
+            $arrivalX = ($limits['width'] / 2) + $arrivalX;
         }
-        if($arrivalY > $limits['y'])
+        if($arrivalY > ($limits['height'] / 2))
         {
-            $arrivalY = $arrivalY - $limits['y'];
+            $arrivalY = $arrivalY - ($limits['height'] / 2);
         }
         elseif($arrivalY < 0)
         {
-            $arrivalY = $limits['y'] + $arrivalY;
+            $arrivalY = ($limits['height'] / 2) + $arrivalY;
         }        
     
         return [$arrivalX, $arrivalY];
