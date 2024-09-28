@@ -113,5 +113,6 @@ $app->get('/next_turn_coords', function($request, $response)
 {
     return \Model\Services\MapManager::ReturnArrival($request, $response, false);
 });
+#endregion
 
 $app->run();
