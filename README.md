@@ -80,6 +80,7 @@ The next thing is to install all the **Node** dependencies.
 ```
 cd client
 npm install
+npm run dev
 ```
 
 That's all.
