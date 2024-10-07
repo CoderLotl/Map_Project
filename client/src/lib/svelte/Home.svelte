@@ -24,7 +24,7 @@
         <div id="top-half" class="w-full h-1/2 flex">
             <div id="map-container" class="border-x border-t border-white w-full h-full rounded-t-3xl p-6 flex flex-col items-center justify-around">
                 <!-- svelte-ignore a11y-missing-attribute -->
-                <img id="clip" class="rounded-3xl w-[80%] mt-[25%]">
+                <img id="clip" class="rounded-3xl w-[70%] mt-[20%] md:w-[40%] md:max-w-[70%] md:mt-[15%]">
                 <p id="coords" class="text-slate-300 pb-20"></p>
             </div>
         </div>
@@ -35,7 +35,7 @@
                     <legend class="px-2 bg-slate-400 rounded-xl duration-500 hover:text-red-600 hover:duration-500">
                         Controls
                     </legend>
-                    <div class="flex justify-center w-full">
+                    <div class="flex justify-center w-full md:mt-[30%]">
                         <div class="flex flex-col mr-[25%]">
                             <span class="text-slate-300">Angle:</span>
                             <span class="text-slate-300 mt-4">Speed:</span>
@@ -76,7 +76,9 @@
                     <legend class="px-2 bg-slate-400 rounded-xl duration-500 hover:text-red-600 hover:duration-500">
                         Details
                     </legend>
-                    <p id="sv_msg" class="italic text-lime-600"></p>
+                    <p id="sv_msg" class="italic text-lime-600 md:mt-[30%] md:mx-[30%]">
+                        Nothing to show.
+                    </p>
                 </fieldset>
             </div>
         </div>
