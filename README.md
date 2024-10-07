@@ -33,6 +33,11 @@
 A very simple system that aims to emulate sailing or, in general temrs, *navigating*, in a 2D plane with some solid or otherwise unpassable abritrary polygonal shaped areas.
 The core principes of this system and why not the code itself can be used on any web game where such a system or tool would be needed.
 
+---
+
+* #### Important :warning:
+    The front is just the barely minimum for the demo, and in no way it's a key part of the system. The heart of the system resides at the back, where the calculations and data management take place.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
