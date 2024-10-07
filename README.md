@@ -37,7 +37,7 @@ The core principes of this system and why not the code itself can be used on any
 
 ---
 
-### Requirements:
+## Requirements:
 
 * **PHP >=7.2**
 
@@ -48,10 +48,10 @@ The core principes of this system and why not the code itself can be used on any
 
 ---
 
-### Built With
+## Built With
 
 * ![Static Badge](https://img.shields.io/badge/PHP%207.20-black?style=for-the-badge&logo=PHP&logoColor=blue)
-    * ![Static Badge](https://img.shields.io/badge/Slim-black?style=for-the-badge&logo=PHP)
+    * ![Static Badge](https://img.shields.io/badge/Slim_4-black?style=for-the-badge&logo=PHP)
 * ![Static Badge](https://img.shields.io/badge/Svelte-black?style=for-the-badge&logo=Svelte&logoColor=%23FF3E00)
 * ![Static Badge](https://img.shields.io/badge/Tailwind%20CSS-black?style=for-the-badge&logo=tailwindcss&logoColor=%2306B6D4)
 * ![Static Badge](https://img.shields.io/badge/SQLite-black?style=for-the-badge&logo=sqlite&logoColor=%23003B57)
@@ -63,7 +63,7 @@ The core principes of this system and why not the code itself can be used on any
 
 ---
 
-### Getting Started
+## Getting Started
 
 Getting this working is quite simple. Once you got a copy of the repository the next thing is downloading all the dependencies, for which you would make use of a terminal.
 
@@ -92,7 +92,7 @@ Now just visit your localhost :).
 
 ---
 
-### Usage
+## Usage
 
 The system is quite simple: either click on the map pic to set the **angle** in relation with the dot (which represents the being/vehicle) or set it in the angle input. Set the **speed** using the dropdown, then press the ***Next Turn*** button. That's all.
 
@@ -113,9 +113,29 @@ For an ease of calculations, this system rounds any number to ***int***. There a
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Mapping mechanics :warning:
+
+The purpose of this project is to provide a code that could be reused by anyone. For that to happen, you, future user, must pay attention to this section.
+
+The map you see is first divided in a discretionary amount of tiles, which are later stored in your database in base64 format, as chunks of strings. The MapManager service comes already with all the functions you would need for doing this, and all you need to do is to provide the right input and output.
+
+You can see an example of that inside the folder `./doc/scripts`.
+
+![](./readme_assets/pic1.png)
+
+For ease of use and simplification of maths, the map is turned into data with a redundancy of data at the borders. This helps to simplify the mechanics when the coords you want to display are near one of the borders and the other side of the map must be shown, which mathematically would be in the ranges that exceed either in negative or positive terms the size of the map.
+
+Here there's an illustration of how the map is stored:
+
+![](./readme_assets/pic2.png)
+
+The green area is the data of the original map, which is divided in 4 quarters. Those quarters are then copied on the borders, giving us a x4 map.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ---
 
-### License
+## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
