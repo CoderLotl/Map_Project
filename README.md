@@ -30,7 +30,7 @@
     <img src="./doc/images/map_example.png">
 </div><br>
 
-A very simple system that aims to emulate sailing or, in general temrs, *navigating*, in a 2D plane with some solid or otherwise unpassable abritrary polygonal shaped areas.
+A very simple system that aims to emulate sailing or, in general terms, *navigating*, in a 2D plane with some solid or otherwise unpassable abritrary polygonal shaped areas.
 The core principes of this system and why not the code itself can be used on any web game where such a system or tool would be needed.
 
 ---
